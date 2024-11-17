@@ -1,9 +1,10 @@
 package org.example;
 
+import java.io.*;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class GoState implements Predicate<Point> {
+public class GoState implements Predicate<Point>, Serializable {
 
     Integer blackCaptured;
     Integer whiteCaptured;
@@ -72,9 +73,15 @@ public class GoState implements Predicate<Point> {
         Set<Point> liberties = new HashSet<>();
         while (!toScan.isEmpty()) {
             Point current = toScan.pop();
-            if (board[current.x][current.y].stone.equals(BoardSpace.EMPTY.stone)) {
+            if (scanned.contains(current)) continue;
+            BoardSpace space = board[current.x][current.y];
+            if(space == BoardSpace.EMPTY) {
                 liberties.add(current);
-            } else if (board[current.x][current.y].stone.equals(s)) {
+                if (current.equals(p)){
+                    toScan.addAll(Arrays.asList(getNeighbors(current)));
+                }
+            }
+            else if (board[current.x][current.y].stone.equals(s)) {
                 scanned.add(current);
                 toScan.addAll(Arrays.asList(getNeighbors(current)));
             }
@@ -82,49 +89,71 @@ public class GoState implements Predicate<Point> {
         return liberties.toArray(Point[]::new);
     }
     public void checkCaptured(Point p){
-        if (getLiberties(Stone.BLACK,p, new HashSet<>()).length == 0){
-            board[p.x][p.y] = BoardSpace.EMPTY;
-            whiteCaptured++;
-        }
-        if (getLiberties(Stone.WHITE,p, new HashSet<>()).length == 0){
-            board[p.x][p.y] = BoardSpace.EMPTY;
-            blackCaptured++;
+        var color = board[p.x][p.y].stone;
+        var scanned = new HashSet<Point>();
+        var liberties = getLiberties(color, p, scanned);
+        if (liberties.length == 0) {
+            for (Point point : scanned) {
+                board[point.x][point.y] = BoardSpace.EMPTY;
+            }
+            if (color.equals(Stone.WHITE))
+                blackCaptured += scanned.size();
+            else whiteCaptured += scanned.size();
         }
     }
 
     public GoState placeStone(Point p){
-        var currentPlayer = this.currentPlayer;
         board[p.x][p.y] = BoardSpace.fromStone(currentPlayer);
-        var neighbours = getNeighbors(p);
-        Arrays.stream(neighbours).forEach(this::checkCaptured);
+        Arrays.stream(getNeighbors(p)).forEach(this::checkCaptured);
         return this;
     }
 
     public boolean isLegalMove(Point p){
         var a =  this.test(p) && board[p.x][p.y].equals(BoardSpace.EMPTY);
-        var b = getLiberties(currentPlayer, p, new HashSet<>()).length == 1
-                && Arrays.stream(getNeighbors(p)).anyMatch(
-                        pr-> board[pr.x][pr.y].stone.equals(currentPlayer)
+        var b = Arrays.stream(getNeighbors(p))
+                .anyMatch(
+                point-> board[point.x][point.y].stone != currentPlayer
+                && getLiberties(currentPlayer, p, new HashSet<>()).length == 1
         );
         if (!a && !b) return false;
         GoState newState = new GoState(this);
-        newState.placeStone(p);
+        newState = newState.placeStone(p);
         return !previousStates.contains(newState);
     }
 
     public boolean makeMove(Point p){
-        // todo
+        if (p == null) {
+            previousStates.add(new GoState(this));
+            currentPlayer = currentPlayer.opposite();
+            return previousStates.contains(new GoState(this));
+        }
         if (!isLegalMove(p)) return false;
         previousStates.add(new GoState(this));
         placeStone(p);
         currentPlayer = currentPlayer.opposite();
-        return true;
+        return false;
     }
 
     @Override
     public String toString() {
         return "Black Captured: " + blackCaptured + "\n" +
                 "White Captured: " + whiteCaptured;
+    }
+
+    public GoState saveGame(String filename) {
+        try (var out = new ObjectOutputStream(new FileOutputStream(filename))) {
+            out.writeObject(this);
+            return this;
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Failed to save game file to: " + filename);
+        }
+    }
+    public static GoState loadGame(String filename) {
+        try (var in = new ObjectInputStream(new FileInputStream(filename))) {
+            return (GoState) in.readObject();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to load game file from: " + filename);
+        }
     }
 }
 
