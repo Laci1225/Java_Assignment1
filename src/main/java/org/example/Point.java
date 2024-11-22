@@ -2,13 +2,8 @@ package org.example;
 
 import java.util.Objects;
 
-public class Point {
-    public Integer x;
-    public Integer y;
-
-    public Point(Integer x, Integer y) {
-        this.x = x;
-        this.y = y;
+public record Point(int x,int y) {
+    public Point {
     }
 
     @Override

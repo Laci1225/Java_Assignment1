@@ -4,10 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import java.util.Arrays;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BoardSizeTest {
 
@@ -23,7 +20,12 @@ public class BoardSizeTest {
     }
 
     @Test
-    public void testFailingFromString() {
+    public void testGetStringValues() {
+        assertArrayEquals(new String[]{"9x9", "13x13", "19x19"}, BoardSize.getStringValues());
+    }
+
+    @Test
+    public void testFromStringFails() {
         assertThrows(IllegalArgumentException.class,
                 () -> BoardSize.fromString("8X8"));
     }
