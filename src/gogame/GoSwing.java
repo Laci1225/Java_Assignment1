@@ -30,7 +30,7 @@ public class GoSwing {
 			var button = new JButton("Start Game");
 			var loadButton = new JButton("Load Game");
 			var passButton = new JButton("Pass");
-			passButton.setVisible(false);
+			//passButton.setVisible(false);
 
 			return new GoInputs(cb, button, loadButton, passButton);
 		}

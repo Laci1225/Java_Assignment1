@@ -5,6 +5,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -26,15 +28,21 @@ public class GoStateTest {
             """})
     public void testIsLegalMove(int x, int y) {
         GoState game = new GoState(9);
+        assertTrue(game.isLegalMove(new Point(x, y)));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"""
+            4,4,
+            5,4,
+            """})
+    public void testIsLegalMoveFalse(int x, int y) {
+        GoState game = new GoState(9);
         game.placeStone(new Point(4, 4));
         game.placeStone(new Point(5, 4));
-        assertTrue(game.isLegalMove(new Point(x, y)));
-        assertAll(
-                () -> assertFalse(game.isLegalMove(new Point(4, 4))),
-                () -> assertFalse(game.isLegalMove(new Point(5, 4))),
-                () -> assertTrue(game.isLegalMove(new Point(4, 5)))
-        );
+        assertFalse(game.isLegalMove(new Point(x, y)));
     }
+
     @Test
     public void testIsLegalMoveSuicide() {
         GoState game = new GoState(9);
@@ -45,6 +53,7 @@ public class GoStateTest {
         game.turn = game.turn.opposite();
         assertFalse(game.isLegalMove(new Point(4, 4)));
     }
+
     @Test
     public void testIsLegalMoveSuicideButCapture() {
         GoState game = new GoState(9);
@@ -107,8 +116,21 @@ public class GoStateTest {
     void testMakeMove(){
         var game = new GoState(9);
         game.makeMove(new Point(0,0));
-        assertTrue(game.makeMove(null));
-        assertTrue(game.makeMove(null));
         assertFalse(game.makeMove(null));
+        game.makeMove(new Point(0,1));
+        assertFalse(game.makeMove(null));
+        assertTrue(game.makeMove(null));
     }
+
+    @Test
+    void testSaveLoadGame() throws IOException {
+        GoState game = new GoState(5);
+        game.placeStone(new Point(1, 1));
+        File file = File.createTempFile("go_game", ".go");
+        game.saveGame(file);
+        GoState loadedState = GoState.loadGame(file);
+        assertEquals(game, loadedState);
+        file.deleteOnExit();
+    }
+
 }

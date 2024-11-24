@@ -108,9 +108,10 @@ public class GoState implements Predicate<Point>, Serializable {
     }
     public boolean makeMove(Point p){
         if (p == null) {
+            if (previousStates.contains(this)) return true;
             previousStates.add(new GoState(this));
             turn = turn.opposite();
-            return previousStates.contains(this);
+            return false;
         }
         if (!isLegalMove(p)) return false;
         placeStone(p);
