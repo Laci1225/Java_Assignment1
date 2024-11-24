@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 
 public class NeighborsArgumentsProvider implements ArgumentsProvider {
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
         return Stream.of(
                 Arguments.of(new Point(0, 0), new Point[]{new Point(0, 1), new Point(1, 0)}),
                 Arguments.of(new Point(0, 8), new Point[]{new Point(1, 8), new Point(0, 7)}),

@@ -20,14 +20,15 @@ public class GoStateTest {
     }
     @ParameterizedTest
     @CsvSource({"""
-            4,4,
             4,5,
-            5,4,
+            6,5,
+            7,4,
             """})
     public void testIsLegalMove(int x, int y) {
         GoState game = new GoState(9);
         game.placeStone(new Point(4, 4));
         game.placeStone(new Point(5, 4));
+        assertTrue(game.isLegalMove(new Point(x, y)));
         assertAll(
                 () -> assertFalse(game.isLegalMove(new Point(4, 4))),
                 () -> assertFalse(game.isLegalMove(new Point(5, 4))),
